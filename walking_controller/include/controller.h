@@ -5,7 +5,7 @@
 #include "sensor_msgs/Imu.h"
 #include "tf/tf.h"
 #include "geometry_msgs/Twist.h"
-#include <Eigen/Dense>
+#include "Eigen/Dense"
 
 #include "a1.h"
 #include "a1_components.h"
@@ -14,8 +14,8 @@
 #include "phase_signal_generator.h"
 #include "kinematics.h"
 
-#include "unitree_legged_msgs/LowCmd.h"
 #include "unitree_legged_msgs/MotorCmd.h"
+#include "unitree_legged_msgs/LowCmd.h"
 
 class Controller {
     ros::Subscriber cmd_vel_subscriber_;

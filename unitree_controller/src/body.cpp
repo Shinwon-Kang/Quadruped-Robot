@@ -43,20 +43,9 @@ void paramInit()
 
 void stand()
 {   
-	if (cnt % 2 ==0) {
-		double pos[12] = {0.0, 0.67, -1.3, -0.0, 0.67, -1.3, 
-		                  0.0, 0.67, -1.3, -0.0, 0.67, -1.3};
-	    moveAllPosition(pos, 2*300);
-
-	}
-	else {
-		double pos[12] = {0.0, 1.0, -2.5, -0.0, 1.0, -2.5, 
-		                  0.0, 1.0, -2.5, -0.0, 1.0, -2.5};
-	    moveAllPosition(pos, 2*300);
-
-    }
-    cnt++;  
-    // moveAllPosition(pos, 2*1000);
+	double pos[12] = {0.0, 0.67, -1.3, -0.0, 0.67, -1.3, 
+	                  0.0, 0.67, -1.3, -0.0, 0.67, -1.3};
+    moveAllPosition(pos, 2*1000);
 }
 
 void motion_init()

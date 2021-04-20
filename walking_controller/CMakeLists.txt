@@ -7,14 +7,14 @@ add_compile_options(-std=c++11)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  Eigen3
   geometry_msgs
   sensor_msgs
   tf
   trajectory_msgs
   genmsg
-  unitree_legged_msgs
   roscpp
+  Eigen3
+  unitree_legged_msgs
 )
 
 ###################################
@@ -27,8 +27,8 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-#    CATKIN_DEPENDS 
-#    unitree_legged_msgs 
+    CATKIN_DEPENDS 
+    unitree_legged_msgs 
 )
 
 ###########

@@ -2,7 +2,7 @@
 #define BODYCONTROLLER_H
 
 #include "array"
-#include <Eigen/Dense>
+#include "Eigen/Dense"
 #include <iostream>
 #include "math.h"
 

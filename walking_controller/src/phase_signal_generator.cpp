@@ -40,6 +40,11 @@ void PhaseSignalGenerator::run(float velocity, float step_length, Time time = no
     leg_clocks[2] = elapsed_time_ref - (0.5f * stride_period);
     leg_clocks[3] = elapsed_time_ref - (0.0f * stride_period);
 
+    // leg_clocks[0] = elapsed_time_ref - (0.0f * stride_period);
+    // leg_clocks[1] = elapsed_time_ref - (0.2f * stride_period);
+    // leg_clocks[2] = elapsed_time_ref - (0.55f * stride_period);
+    // leg_clocks[3] = elapsed_time_ref - (0.75f * stride_period);
+
     for(int i = 0; i < 4; i++)
     {
         if(leg_clocks[i] > 0 and leg_clocks[i] < stance_phase_period)
