@@ -1,0 +1,7 @@
+<launch>
+	<group>
+        <node pkg="champ_base" name="state_estimator" type="state_estimation_node" output="screen">
+            <param name="orientation_from_imu" value="true"/>     
+        </node>
+    </group>
+</launch>
