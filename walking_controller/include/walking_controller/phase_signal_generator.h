@@ -4,6 +4,10 @@
 #include "macros.h"
 #include "a1.h"
 
+#include <algorithm>
+#include <iterator>
+#include <iostream>
+
 class PhaseSignalGenerator {
     public:
         typedef unsigned long int Time;

@@ -8,6 +8,9 @@
 
 #include <tf/transform_listener.h>
 
+#include <cmath>
+#include <algorithm>
+
 tf::StampedTransform transform;
 
 grid_map::GridMap map_from_topic;
@@ -25,15 +28,30 @@ void elevationMapCallback(const grid_map_msgs::GridMap& msg) {
     grid_map::GridMapRosConverter::fromMessage(msg, map_from_topic);
 
     grid_map::Position p(0, 0);
+    // double max = -100;
+
     for (int i=0; i<map_to_topic.getSize()(1); i++) for (int j=0; j<map_to_topic.getSize()(0); j++) {
         grid_map::Index idx(i, j);
         map_to_topic.getPosition(idx, p);
 
-        if (map_from_topic.isInside(p))
-            map_to_topic.at("elevation", idx) = map_from_topic.atPosition("elevation", p);
-        else
+        if (map_from_topic.isInside(p)) {
+            // map_to_topic.at("elevation", idx) = map_from_topic.atPosition("elevation", p);
+            double value = 1 - map_from_topic.atPosition("elevation", p) / 0.2;
+
+            if(value > 0.4) {
+                map_to_topic.at("elevation", idx) = 1;
+            } else {
+                map_to_topic.at("elevation", idx) = 0;
+            }
+        } else
             ROS_ERROR("ERROR Position: %f %f", p(0), p(1));
+
+        // double v = map_from_topic.atPosition("elevation", p);
+        // if(!std::isnan(v) && v > max) {
+            // max = v;
+        // }
     }
+    // ROS_INFO("Max value %f", max);
 }
 
 int main(int argc, char **argv) {
@@ -41,7 +59,7 @@ int main(int argc, char **argv) {
     ros::NodeHandle n;
 
     ros::Publisher elevation_map_pub = n.advertise<grid_map_msgs::GridMap>("foothold_map", 1);
-    ros::Subscriber elevation_map_sub = n.subscribe("/elevation_mapping/elevation_map_raw", 1, elevationMapCallback);
+    ros::Subscriber elevation_map_sub = n.subscribe("/elevation_mapping/elevation_map", 1, elevationMapCallback);
 
     tf::TransformListener listener;
     ros::Rate rate(100.0);

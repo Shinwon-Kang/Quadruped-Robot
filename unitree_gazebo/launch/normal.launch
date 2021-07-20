@@ -11,6 +11,11 @@
     <arg name="debug" default="false"/>
     <!-- Debug mode will hung up the robot, use "true" or "false" to switch it. -->
     <arg name="user_debug" default="false"/>
+
+    <arg name="description_name"           default="robot_description"/>
+    <arg name="description_file"           default="/home/kangsinwon/catkin_ws/src/Quadruped_Robot/robots/a1_description/urdf/a1.urdf"/>
+
+    <param name="$(arg description_name)" textfile="$(arg description_file)"/>
     
     <include file="$(find gazebo_ros)/launch/empty_world.launch">
         <arg name="world_name" value="$(find unitree_gazebo)/worlds/$(arg wname).world"/>
@@ -46,6 +51,10 @@
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="robot_state_publisher"
           respawn="false" output="screen">
         <remap from="/joint_states" to="/$(arg rname)_gazebo/joint_states"/>
+        <param name="use_tf_static"     value="false"/>
+        <param name="publish_frequency" value="200"/>
+        <param name="ignore_timestamp" value="true"/>
+        <remap from="robot_description" to="$(arg description_name)"/>
     </node>
 
     <!-- <node pkg="unitree_gazebo" type="servo" name="servo" required="true" output="screen"/> -->

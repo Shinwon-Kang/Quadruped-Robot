@@ -2,6 +2,7 @@
 #define FOOTTRAJECTORYPLANNER_H
 
 #include "Eigen/Dense"
+#include "iostream"
 
 #include "a1.h"
 

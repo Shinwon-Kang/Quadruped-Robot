@@ -14,9 +14,9 @@ find_package(catkin REQUIRED COMPONENTS
   std_msgs
   geometry_msgs
   sensor_msgs
-  grid_map_core
-  grid_map_ros
-  grid_map_msgs
+  # grid_map_core
+  # grid_map_ros
+  # grid_map_msgs
   champ_msgs
 )
 
@@ -37,9 +37,9 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(foothold_pub src/foothold_pub_node.cpp 
-                            src/foothold_pub.cpp src/foothold_map.cpp)
+# add_executable(foothold_pub src/foothold_pub_node.cpp 
+                            # src/foothold_pub.cpp src/foothold_map.cpp)
 
-target_link_libraries(foothold_pub
-  ${catkin_LIBRARIES}
-)
+# target_link_libraries(foothold_pub
+  # ${catkin_LIBRARIES}
+# )

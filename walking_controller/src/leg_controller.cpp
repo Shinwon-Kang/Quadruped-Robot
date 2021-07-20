@@ -1,4 +1,4 @@
-#include "leg_controller.h"
+#include "walking_controller/leg_controller.h"
 
 float LegController::min_max_velocity(float v, float min_v, float max_v) {
     return ((v)<(min_v)?(min_v):((v)>(max_v)?(max_v):(v)));
@@ -54,7 +54,7 @@ void LegController::run(std::array<Eigen::Matrix4f, 4>& foot_positions, Velociti
     float sum_of_steps = 0.0f;
 
     for(int i = 0; i < 4; i++) {
-        transfromLegToNextStep(step_lengths[i], trajectory_rotations[i], *a1_base_->legs[i], step_x, step_y, theta);
+        transfromLegToNextStep(step_lengths[i], trajectory_rotations[i], * a1_base_->legs[i], step_x, step_y, theta);
         sum_of_steps += step_lengths[i];
     }
 

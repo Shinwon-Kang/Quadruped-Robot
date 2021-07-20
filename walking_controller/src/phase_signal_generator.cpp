@@ -1,8 +1,8 @@
-#include "phase_signal_generator.h"
+#include "walking_controller/phase_signal_generator.h"
 
 void PhaseSignalGenerator::run(float velocity, float step_length, Time time = now()) {
     unsigned long elapsed_time_ref = 0;
-    float swing_phase_period = 0.25f * SECONDS_TO_MICROS;
+    float swing_phase_period = 0.18f * SECONDS_TO_MICROS;
     float leg_clocks[4] = {0.0f, 0.0f, 0.0f, 0.0f};
     float stance_phase_period =  stance_duration_ * SECONDS_TO_MICROS;
     float stride_period = stance_phase_period + swing_phase_period;
@@ -36,14 +36,9 @@ void PhaseSignalGenerator::run(float velocity, float step_length, Time time = no
         elapsed_time_ref = time - last_touchdown_;
 
     leg_clocks[0] = elapsed_time_ref - (0.0f * stride_period);
-    leg_clocks[1] = elapsed_time_ref - (0.5f * stride_period);
-    leg_clocks[2] = elapsed_time_ref - (0.5f * stride_period);
+    leg_clocks[1] = elapsed_time_ref - (0.50f * stride_period);
+    leg_clocks[2] = elapsed_time_ref - (0.50f * stride_period);
     leg_clocks[3] = elapsed_time_ref - (0.0f * stride_period);
-
-    // leg_clocks[0] = elapsed_time_ref - (0.0f * stride_period);
-    // leg_clocks[1] = elapsed_time_ref - (0.2f * stride_period);
-    // leg_clocks[2] = elapsed_time_ref - (0.55f * stride_period);
-    // leg_clocks[3] = elapsed_time_ref - (0.75f * stride_period);
 
     for(int i = 0; i < 4; i++)
     {

@@ -1,21 +1,31 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(A1_base)
 
-add_compile_options(-std=c++11)
-
+# add_compile_options(-std=c++11)
+set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
+# set(CMAKE_CXX_FLAGS "-std=c++11 ${CMAKE_CXX_FLAGS}")
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  grid_map_core
   geometry_msgs
   sensor_msgs
   tf
   trajectory_msgs
   genmsg
   roscpp
-  Eigen3
   unitree_legged_msgs
+  jsk_recognition_msgs
+  kindr
+  kindr_ros
+  grid_map_ros
+  grid_map_msgs
 )
+
+find_package(Eigen3 REQUIRED)
+
+# find_package(CGAL REQUIRED)
 
 ###################################
 ## catkin specific configuration ##
@@ -27,8 +37,13 @@ find_package(catkin REQUIRED COMPONENTS
 ## CATKIN_DEPENDS: catkin_packages dependent projects also need
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
-    CATKIN_DEPENDS 
-    unitree_legged_msgs 
+  INCLUDE_DIRS
+    include
+    ${EIGEN3_INCLUDE_DIR}
+  LIBRARIES ${PROJECT_NAME}
+  CATKIN_DEPENDS 
+    unitree_legged_msgs
+    grid_map_core
 )
 
 ###########
@@ -44,8 +59,17 @@ include_directories(
 )
 
 # add_dependencies(controller_node unitree_legged_msgs_gencpp)
+add_library(${PROJECT_NAME}_library
+  src/a1_adapter.cpp
+  src/body_controller.cpp 
+  src/controller.cpp
+  src/foot_trajectory_planner.cpp
+  src/kinematics.cpp
+  src/leg_controller.cpp 
+  src/phase_signal_generator.cpp 
+  src/QuadProg++.cc
+  src/util_transformations.cpp
+)
 
-add_executable(controller_node src/controller_node.cpp src/controller.cpp 
-                      src/body_controller.cpp src/leg_controller.cpp src/kinematics.cpp
-                      src/phase_signal_generator.cpp src/foot_trajectory_planner.cpp)
-target_link_libraries(controller_node ${catkin_LIBRARIES} ${EXTRA_LIBS})
+add_executable(controller_node src/controller_node.cpp src/pose_optimizer.cpp)
+target_link_libraries(controller_node ${catkin_LIBRARIES} ${EXTRA_LIBS} ${PROJECT_NAME}_library)

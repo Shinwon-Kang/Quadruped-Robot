@@ -55,6 +55,7 @@ class Joint {
 class QuadrupedLeg {
     bool gait_phase_;
     int knee_direction_;
+    float force_;
 
     public:
         Joint *joints[4];
@@ -66,7 +67,8 @@ class QuadrupedLeg {
 
         QuadrupedLeg():
             gait_phase_(1),
-            knee_direction_(-1)
+            knee_direction_(-1),
+            force_(0)
         {
             joints[0] = &hip;
             joints[1] = &upper_leg;
@@ -84,7 +86,7 @@ class QuadrupedLeg {
         Eigen::Vector3f zero_stance() {
             Eigen::Vector3f t;
             // TODO: com_x_translation
-            t.x() = hip.x() + upper_leg.x() - 0.025;
+            t.x() = hip.x() + upper_leg.x() - 0.005;
 
             t.y() = hip.y() + upper_leg.y();
 
@@ -93,12 +95,24 @@ class QuadrupedLeg {
             return t;
         }
 
-        bool gait_phase(bool phase) {
+        void gait_phase(bool phase) {
             gait_phase_ = phase;
+        }
+
+        bool gait_phase() {
+            return gait_phase_;
         }
 
         int knee_direction() {
             return knee_direction_;
+        }
+
+        void force(float f) {
+            force_ = f;
+        }
+
+        float force() {
+            return force_;
         }
 };
 
@@ -106,38 +120,37 @@ class A1 {
     public:
         QuadrupedLeg *legs[4];
 
-        QuadrupedLeg FR_;
         QuadrupedLeg FL_;
-        QuadrupedLeg RR_;
+        QuadrupedLeg FR_;
         QuadrupedLeg RL_;
+        QuadrupedLeg RR_;
 
         A1() {
-            FR_.hip.setOrigin(0.1805, -0.047, 0.0, 0.0, 0.0, 0.0);
-            FR_.upper_leg.setOrigin(0.0, -0.0838, 0.0, 0.0, 0.0, 0.0);
-            FR_.lower_leg.setOrigin(0.0, 0.0, -0.2, 0.0, 0.0, 0.0);
-            FR_.foot.setOrigin(0.0, 0.0, -0.2, 0.0, 0.0, 0.0);
-
             FL_.hip.setOrigin(0.1805, 0.047, 0.0, 0.0, 0.0, 0.0);
             FL_.upper_leg.setOrigin(0.0, 0.0838, 0.0, 0.0, 0.0, 0.0);
             FL_.lower_leg.setOrigin(0.0, 0.0, -0.2, 0.0, 0.0, 0.0);
             FL_.foot.setOrigin(0.0, 0.0, -0.2, 0.0, 0.0, 0.0);
 
-            RR_.hip.setOrigin(-0.1805, -0.047, 0.0, 0.0, 0.0, 0.0);
-            RR_.upper_leg.setOrigin(0.0, -0.0838, 0.0, 0.0, 0.0, 0.0);
-            RR_.lower_leg.setOrigin(0.0, 0.0, -0.2, 0.0, 0.0, 0.0);
-            RR_.foot.setOrigin(0.0, 0.0, -0.2, 0.0, 0.0, 0.0);
+            FR_.hip.setOrigin(0.1805, -0.047, 0.0, 0.0, 0.0, 0.0);
+            FR_.upper_leg.setOrigin(0.0, -0.0838, 0.0, 0.0, 0.0, 0.0);
+            FR_.lower_leg.setOrigin(0.0, 0.0, -0.2, 0.0, 0.0, 0.0);
+            FR_.foot.setOrigin(0.0, 0.0, -0.2, 0.0, 0.0, 0.0);
 
             RL_.hip.setOrigin(-0.1805, 0.047, 0.0, 0.0, 0.0, 0.0);
             RL_.upper_leg.setOrigin(0.0, 0.0838, 0.0, 0.0, 0.0, 0.0);
             RL_.lower_leg.setOrigin(0.0, 0.0, -0.2, 0.0, 0.0, 0.0);
             RL_.foot.setOrigin(0.0, 0.0, -0.2, 0.0, 0.0, 0.0);
 
-            legs[0] = &FR_;
-            legs[1] = &FL_;
-            legs[2] = &RR_;
-            legs[3] = &RL_;
-        }
+            RR_.hip.setOrigin(-0.1805, -0.047, 0.0, 0.0, 0.0, 0.0);
+            RR_.upper_leg.setOrigin(0.0, -0.0838, 0.0, 0.0, 0.0, 0.0);
+            RR_.lower_leg.setOrigin(0.0, 0.0, -0.2, 0.0, 0.0, 0.0);
+            RR_.foot.setOrigin(0.0, 0.0, -0.2, 0.0, 0.0, 0.0);
 
+            legs[0] = &FL_;
+            legs[1] = &FR_;
+            legs[2] = &RL_;
+            legs[3] = &RR_;
+        }
 };
 
 #endif

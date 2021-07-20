@@ -1,4 +1,4 @@
-#include "foot_trajectory_planner.h"
+#include "walking_controller/foot_trajectory_planner.h"
 
 void FootTrajectoryPlanner::updateControlPointsLength(float step_length) {
     float new_length_ratio = step_length / 0.4f;
@@ -31,8 +31,8 @@ void FootTrajectoryPlanner::updateControlPointsHeight(float swing_height) {
 
 void FootTrajectoryPlanner::run(Eigen::Matrix4f &foot_position, float step_length, float rotation,
                                 float swing_phase_signal, float stance_phase_signal) {
-    // TODO: parameter                                     
-    updateControlPointsHeight(0.07);
+    // TODO: parameter -> swing_height                         
+    updateControlPointsHeight(0.1);
 
     if(!has_started_) {
         has_started_ = true;
@@ -81,4 +81,5 @@ void FootTrajectoryPlanner::run(Eigen::Matrix4f &foot_position, float step_lengt
     }
 
     prev_foot_position_ = foot_position;
+
 }
