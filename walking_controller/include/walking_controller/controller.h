@@ -23,12 +23,17 @@
 #include "unitree_legged_msgs/MotorCmd.h"
 #include "unitree_legged_msgs/LowCmd.h"
 #include "unitree_legged_msgs/ContactsStamped.h"
+#include "unitree_legged_msgs/LowState.h"
 
 #include "jsk_recognition_msgs/PolygonArray.h"
 
 class Controller {
+    bool init_standup = false;
+    bool init_motor = false;
+
     ros::Subscriber cmd_vel_subscriber_;
     ros::Subscriber imu_subscriber_;
+    ros::Subscriber lowState_subscriber_;
 
     ros::Timer loop_func_;
 
@@ -44,9 +49,6 @@ class Controller {
     ros::Publisher servo_pub_[12];
     ros::Publisher foot_contacts_pub_;
 
-    ros::Publisher foot_polygon_;
-    ros::Publisher cog_vis_pub_;
-
     ros::Subscriber footForce_sub_[4];
     float footForce_[4];        
 
@@ -54,6 +56,8 @@ class Controller {
 
     PoseOptimizer pose_optimizer_;
 
+    // unitree_legged_msgs::LowState lowState;
+    double motorQstate[12];
 
     // PID Controller
     // float kp=0.15, ki=0.02, kd=0.002;
@@ -65,6 +69,7 @@ class Controller {
     ros::Time last_send_time;
     /////////////////////////////////////
 
+    void standup();
     void controlLoop_(const ros::TimerEvent& event);
     void matrixInit_(std::array<Eigen::Matrix4f, 4>& m, int size);
 
@@ -84,6 +89,7 @@ class Controller {
 
     void cmdVelCallback_(const geometry_msgs::Twist::ConstPtr& msg);
     void ImuCallback_(const sensor_msgs::Imu::ConstPtr& msg);
+    void lowStateCallback_(const unitree_legged_msgs::LowState::ConstPtr& msg);
 
     void publishJoints_(std::vector<double> target_joins);
     void publishJoints_(float target_joints[12]);

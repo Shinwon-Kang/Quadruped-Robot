@@ -58,18 +58,45 @@ include_directories(
   ${EIGEN_INCLUDE_DIRS}
 )
 
+# link_directories(
+# 	$ENV{UNITREE_LEGGED_SDK_PATH}/lib 
+# )
+
+# set(EXTRA_LIBS libunitree_legged_sdk_arm64.so lcm)
+
 # add_dependencies(controller_node unitree_legged_msgs_gencpp)
 add_library(${PROJECT_NAME}_library
   src/a1_adapter.cpp
-  src/body_controller.cpp 
+  src/body_controller.cpp
   src/controller.cpp
   src/foot_trajectory_planner.cpp
   src/kinematics.cpp
-  src/leg_controller.cpp 
-  src/phase_signal_generator.cpp 
+  src/leg_controller.cpp
+  src/phase_signal_generator.cpp
   src/QuadProg++.cc
   src/util_transformations.cpp
+  src/real_robot.cpp
+  src/pose_optimizer.cpp
 )
 
-add_executable(controller_node src/controller_node.cpp src/pose_optimizer.cpp)
-target_link_libraries(controller_node ${catkin_LIBRARIES} ${EXTRA_LIBS} ${PROJECT_NAME}_library)
+include_directories($ENV{UNITREE_LEGGED_SDK_PATH}/include)
+link_directories($ENV{UNITREE_LEGGED_SDK_PATH}/lib)
+string(CONCAT LEGGED_SDK_NAME libunitree_legged_sdk_arm64.so)
+set(EXTRA_LIBS ${LEGGED_SDK_NAME} lcm)
+# add_definitions(-DSDK3_2)
+
+#add_executable(controller_node src/controller_node.cpp)
+#target_link_libraries(controller_node ${catkin_LIBRARIES} ${EXTRA_LIBS} ${PROJECT_NAME}_library)
+
+#add_executable(lowstate_pub src/lowstate_pub/lowstate_pub.cpp)
+#target_link_libraries(lowstate_pub ${catkin_LIBRARIES} ${EXTRA_LIBS})
+
+# include_directories(/home/kangsinwon/unitree_legged_sdk/include)
+# link_directories(/home/kangsinwon/unitree_legged_sdk/lib)
+# string(CONCAT LEGGED_SDK_NAME libunitree_legged_sdk_amd64.so)
+
+# set_target_properties( unitree_sdk PROPERTIES IMPORTED_LOCATION /home/kangsinwon/unitree_legged_sdk/lib/libunitree_legged_sdk_amd64.so )
+
+add_executable(real_bot src/real_bot.cpp)
+target_link_libraries(real_bot ${catkin_LIBRARIES} ${EXTRA_LIBS} ${PROJECT_NAME}_library)
+add_dependencies(real_bot ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})

@@ -9,8 +9,11 @@ Controller::Controller(ros::NodeHandle *nh, ros::NodeHandle *pnh):
     leg_controller_(a1_base_, rosTimeToRobotTime(ros::Time::now())),
     kinematics_(a1_base_)
 {
+    lowState_subscriber_ = nh->subscribe("/a1_gazebo/lowState/state", 1, &Controller::lowStateCallback_, this);
+
     cmd_vel_subscriber_ = nh->subscribe("/cmd_vel/smooth", 1, &Controller::cmdVelCallback_, this);
     imu_subscriber_ = nh->subscribe("/trunk_imu", 1, &Controller::ImuCallback_, this);
+
     footForce_sub_[0] = nh->subscribe("/visual/FR_foot_contact/the_force", 1, &Controller::FRfootCallback, this);
     footForce_sub_[1] = nh->subscribe("/visual/FL_foot_contact/the_force", 1, &Controller::FLfootCallback, this);
     footForce_sub_[2] = nh->subscribe("/visual/RR_foot_contact/the_force", 1, &Controller::RRfootCallback, this);
@@ -30,10 +33,9 @@ Controller::Controller(ros::NodeHandle *nh, ros::NodeHandle *pnh):
     servo_pub_[11] = nh->advertise<unitree_legged_msgs::MotorCmd>("/a1_gazebo/RR_calf_controller/command", 1);
 
     foot_contacts_pub_ = nh->advertise<unitree_legged_msgs::ContactsStamped>("foot_contacts", 1);
-    foot_polygon_ = nh->advertise<jsk_recognition_msgs::PolygonArray>("polygon", 1);
-    cog_vis_pub_ = nh->advertise<visualization_msgs::Marker>("visualization_marker", 1);
-
     optim_pose = nh->advertise<geometry_msgs::Pose>("optim_pose", 1);
+
+    // standup();
 
     double loop_rate = 200.0;
     loop_func_ = pnh->createTimer(ros::Duration(1 / loop_rate),
@@ -48,7 +50,54 @@ Controller::Controller(ros::NodeHandle *nh, ros::NodeHandle *pnh):
     last_send_time = ros::Time::now();
 }
 
+void Controller::standup() {
+    for(int i=0; i<4; i++){
+        lowCmd.motorCmd[i*3+0].mode = 0x0A;
+        lowCmd.motorCmd[i*3+0].Kp = 100;
+        lowCmd.motorCmd[i*3+0].dq = 0;
+        lowCmd.motorCmd[i*3+0].Kd = 4;
+        lowCmd.motorCmd[i*3+0].tau = 0;
+        lowCmd.motorCmd[i*3+1].mode = 0x0A;
+        lowCmd.motorCmd[i*3+1].Kp = 100;
+        lowCmd.motorCmd[i*3+1].dq = 0;
+        lowCmd.motorCmd[i*3+1].Kd = 4;
+        lowCmd.motorCmd[i*3+1].tau = 0;
+        lowCmd.motorCmd[i*3+2].mode = 0x0A;
+        lowCmd.motorCmd[i*3+2].Kp = 100;
+        lowCmd.motorCmd[i*3+2].dq = 0;
+        lowCmd.motorCmd[i*3+2].Kd = 4;
+        lowCmd.motorCmd[i*3+2].tau = 0;
+    }
+
+    double target_pos[12] = {0.0, 0.67, -1.3, -0.0, 0.67, -1.3, 
+                             0.0, 0.67, -1.3, -0.0, 0.67, -1.3};
+
+    double duration = 20000.0;
+    double pos[12] ,lastPos[12], percent=0;
+
+    // TODO: motor의 처음 q를 불러와야됨
+
+    for(int j=0; j<12; j++) lastPos[j] = motorQstate[j];
+    for(int i=1; i<=duration; i++){
+        if(!ros::ok()) break;
+        percent = (double)i/duration;
+        for(int j=0; j<12; j++){
+            lowCmd.motorCmd[j].q = lastPos[j]*(1-percent) + target_pos[j]*percent;
+        }
+
+        for(int m=0; m<12; m++){
+            servo_pub_[m].publish(lowCmd.motorCmd[m]);
+        }
+        usleep(1000);
+    }
+
+    init_standup = true;
+}
+
 void Controller::controlLoop_(const ros::TimerEvent& event) {
+    if(!init_standup)
+        return;
+
     float target_joint_position[12];
     std::array<Eigen::Matrix4f, 4> target_foot_positions;
     matrixInit_(target_foot_positions, 4);
@@ -64,7 +113,7 @@ void Controller::controlLoop_(const ros::TimerEvent& event) {
 
     int contacts_n = publishFootContacts_(foot_contacts);
 
-    // 4. Pose optimizer    
+    // 4. Pose optimizer        
     // std::cout << "target_foot_positions: " << std::endl << target_foot_positions[2](0, 3) 
     //                                        << std::endl << target_foot_positions[2](1, 3)
     //                                        << std::endl << target_foot_positions[2](2, 3) << std::endl;
@@ -105,63 +154,27 @@ void Controller::controlLoop_(const ros::TimerEvent& event) {
 
     float roll_comp = -ret[0];
     float pitch_comp = -ret[1];
-
-    // Eigen::Matrix3f x_rotation_matrix;
-    // x_rotation_matrix = Eigen::AngleAxisf(roll_comp, Eigen::Vector3f::UnitX());
-    // Eigen::Matrix3f y_rotation_matrix;
-    // y_rotation_matrix = Eigen::AngleAxisf(pitch_comp, Eigen::Vector3f::UnitX());
-    // Eigen::Matrix3f z_rotation_matrix;
-    // z_rotation_matrix = Eigen::AngleAxisf(0, Eigen::Vector3f::UnitX());
-
     Eigen::Matrix3f rot = rotxyz(roll_comp, pitch_comp, 0);
-    // Eigen::Matrix3f rot = x_rotation_matrix * y_rotation_matrix * z_rotation_matrix;
-
-    // std::cout << "error:" << std::endl << error << std::endl;
-    // printf("roll : %.4f\n", roll_comp);
-    // printf("pitch : %.4f\n", pitch_comp);
-    // std::cout << "rot" << std::endl << rot << std::endl;
-    ///////////////////////////////////////
 
     // 3. Inverse
     kinematics_.inverse(target_joint_position, target_foot_positions, pose);
 
 
     // 3. Inverse Test
-    Eigen::Matrix<float, 3, 4> leg_positions;
-    leg_positions << target_foot_positions[1](0, 3)+0.1805, target_foot_positions[0](0, 3)+0.1805, target_foot_positions[3](0, 3)-0.1805, target_foot_positions[2](0, 3)-0.1805,
-                     target_foot_positions[1](1, 3)-0.047, target_foot_positions[0](1, 3)+0.047, target_foot_positions[3](1, 3)-0.047, target_foot_positions[2](1, 3)+0.047,
-                     target_foot_positions[1](2, 3), target_foot_positions[0](2, 3), target_foot_positions[3](2, 3), target_foot_positions[2](2, 3);
+    // Eigen::Matrix<float, 3, 4> leg_positions;
+    // leg_positions << target_foot_positions[1](0, 3)+0.1805, target_foot_positions[0](0, 3)+0.1805, target_foot_positions[3](0, 3)-0.1805, target_foot_positions[2](0, 3)-0.1805,
+    //                  target_foot_positions[1](1, 3)-0.047, target_foot_positions[0](1, 3)+0.047, target_foot_positions[3](1, 3)-0.047, target_foot_positions[2](1, 3)+0.047,
+    //                  target_foot_positions[1](2, 3), target_foot_positions[0](2, 3), target_foot_positions[3](2, 3), target_foot_positions[2](2, 3);
 
     // std::cout << target_foot_positions[0](1, 3) << ", " << target_foot_positions[1](1, 3) << ", " << target_foot_positions[2](1, 3) << ", " << target_foot_positions[3](1, 3) << std::endl;
     // leg_positions << target_foot_positions[0](0, 3)+0.1805, target_foot_positions[1](0, 3)+0.1805, target_foot_positions[2](0, 3)-0.1805, target_foot_positions[3](0, 3)-0.1805,
     //                  target_foot_positions[0](1, 3)+0.047, target_foot_positions[1](1, 3)-0.047, target_foot_positions[2](1, 3)+0.047, target_foot_positions[3](1, 3)-0.047,
     //                  target_foot_positions[0](2, 3), target_foot_positions[1](2, 3), target_foot_positions[2](2, 3), target_foot_positions[3](2, 3);
 
-    // std::cout << "leg positions" << std::endl << leg_positions << std::endl;
-
-    // TEST /////////////////
-    // target_foot_positions[0](0, 3) = -0.005; target_foot_positions[0](1, 3) = 0.0838; target_foot_positions[0](2, 3) = -0.28; //FL
-    // target_foot_positions[1](0, 3) = 0.01; target_foot_positions[1](1, 3) = -0.0838; target_foot_positions[1](2, 3) = -0.2; //FR
-    // target_foot_positions[2](0, 3) = -0.005; target_foot_positions[2](1, 3) = 0.0838; target_foot_positions[2](2, 3) = -0.28; //RL
-    // target_foot_positions[3](0, 3) = -0.005; target_foot_positions[3](1, 3) = -0.0838; target_foot_positions[3](2, 3) = -0.28; //RR
-
-    // leg_positions << target_foot_positions[0](0, 3)+0.1805, target_foot_positions[1](0, 3)+0.1805, target_foot_positions[2](0, 3)-0.1805, target_foot_positions[3](0, 3)-0.1805,
-    //                  target_foot_positions[0](1, 3)-0.047, target_foot_positions[1](1, 3)+0.047, target_foot_positions[2](1, 3)-0.047, target_foot_positions[3](1, 3)+0.047,
-    //                  target_foot_positions[0](2, 3), target_foot_positions[1](2, 3), target_foot_positions[2](2, 3), target_foot_positions[3](2, 3);
-
-
-
-    // Eigen::VectorXd pose_t = pose_optimizer_.optimize(target_foot_positions, foot_contacts);
-    // std::cout << "pose_test: " << std::endl << pose_t << std::endl;
-    // kinematics_.inverse(target_joint_position, target_foot_positions, pose);
-    ////////////////////////
-
-
     // for(int i=0; i<4; i++) {
         // leg_positions.col(i) = rot * leg_positions.col(i);
     // }
 
-    
     // std::cout << "leg_positions" << std::endl << leg_positions << std::endl;
     float dx = pose(0);
     float dy = pose(1);
@@ -169,17 +182,13 @@ void Controller::controlLoop_(const ros::TimerEvent& event) {
     std::cout << "Pose Optim: " << dx << ", " << dy << ", " << dz << std::endl;
 
     geometry_msgs::Pose po;
-
     geometry_msgs::Point p;
     p.x = dx;
     p.y = dy;
     p.z = dz;
-
     po.position = p;
-
     optim_pose.publish(po);
     
-    // std::vector<double> test_angles = kinematics_.wholeBodyIK(leg_positions, dx, dy, 0.0, 0.0, 0.0, dz);
     // std::vector<double> test_angles = kinematics_.wholeBodyIK(leg_positions, dx, dy, 0.0, 0.0, 0.0, dz);
     // std::vector<double> test_angles = kinematics_.wholeBodyIK(leg_positions, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0);
 
@@ -318,6 +327,13 @@ void Controller::ImuCallback_(const sensor_msgs::Imu::ConstPtr& msg) {
     // req_pose_.position.x = msg->position.x;
     // req_pose_.position.y = msg->position.y;
     // req_pose_.position.z = msg->position.z;
+}
+
+void Controller::lowStateCallback_(const unitree_legged_msgs::LowState::ConstPtr& msg) {
+    for(int i = 0; i < 12; i++) {
+        motorQstate[i] = msg->motorState[i].q;
+    }
+    init_motor = true;
 }
 
 void Controller::FRfootCallback(const geometry_msgs::WrenchStamped& msg)
