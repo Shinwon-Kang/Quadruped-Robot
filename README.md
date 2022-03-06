@@ -7,3 +7,4 @@ Sequence Control + Pose Optimization
 
 
 ## Flow Chart
+![flowchart](https://user-images.githubusercontent.com/28734653/156926509-ec0896cd-ae10-4c2b-bc94-eb41c8c6f3f5.png)
