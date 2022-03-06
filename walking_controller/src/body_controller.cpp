@@ -1,4 +1,4 @@
-#include "body_controller.h"
+#include "walking_controller/body_controller.h"
 
 
 void BodyController::run(std::array<Eigen::Matrix4f, 4>& foot_position, const Pose &req_pose) {
@@ -36,7 +36,7 @@ void BodyController::run(Eigen::Matrix4f &foot_position, QuadrupedLeg &leg, cons
     float req_translation_y = -req_pose.position.y;
 
     float req_translation_z = -(leg.zero_stance().z() + req_pose.position.z); // 0.082
-    float max_translation_z = -leg.zero_stance().z() * 0.25; // 0.1833
+    float max_translation_z = -leg.zero_stance().z() * 0.65; // 0.25; // 0.1833
 
     if(req_translation_z < 0.0)
     {
@@ -57,18 +57,19 @@ void BodyController::run(Eigen::Matrix4f &foot_position, QuadrupedLeg &leg, cons
     foot_position(2, 3) += req_translation_z;
 
     // Rotate(Z)
-    foot_position(0, 3) = cosf(-req_pose.orientation.yaw) * foot_position(0, 3) - sinf(-req_pose.orientation.yaw) * foot_position(1, 3);
-    foot_position(1, 3) = sinf(-req_pose.orientation.yaw) * foot_position(0, 3) + cosf(-req_pose.orientation.yaw) * foot_position(1, 3);
+    // foot_position(0, 3) = cosf(-req_pose.orientation.yaw) * foot_position(0, 3) - sinf(-req_pose.orientation.yaw) * foot_position(1, 3);
+    // foot_position(1, 3) = sinf(-req_pose.orientation.yaw) * foot_position(0, 3) + cosf(-req_pose.orientation.yaw) * foot_position(1, 3);
 
     // Rotate(Y)
-    foot_position(0, 3) = cosf(-req_pose.orientation.pitch) * foot_position(0, 3) + sinf(-req_pose.orientation.pitch) * foot_position(2, 3);
-    foot_position(2, 3) = -sinf(-req_pose.orientation.pitch) * foot_position(0, 3) + cosf(-req_pose.orientation.pitch) * foot_position(2, 3);
+    // foot_position(0, 3) = cosf(-req_pose.orientation.pitch) * foot_position(0, 3) + sinf(-req_pose.orientation.pitch) * foot_position(2, 3);
+    // foot_position(2, 3) = -sinf(-req_pose.orientation.pitch) * foot_position(0, 3) + cosf(-req_pose.orientation.pitch) * foot_position(2, 3);
 
     // Rotate(X)
-    foot_position(1, 3) = cosf(-req_pose.orientation.roll) * foot_position(1, 3) - sinf(-req_pose.orientation.roll) * foot_position(2, 3);
-    foot_position(2, 3) = sinf(-req_pose.orientation.roll) * foot_position(1, 3) + cosf(-req_pose.orientation.roll) * foot_position(2, 3);
+    // foot_position(1, 3) = cosf(-req_pose.orientation.roll) * foot_position(1, 3) - sinf(-req_pose.orientation.roll) * foot_position(2, 3);
+    // foot_position(2, 3) = sinf(-req_pose.orientation.roll) * foot_position(1, 3) + cosf(-req_pose.orientation.roll) * foot_position(2, 3);
 
     // transformToHip
     foot_position(0, 3) -= leg.hip.x();
     foot_position(1, 3) -= leg.hip.y();
+
 }
