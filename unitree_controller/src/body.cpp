@@ -71,9 +71,11 @@ void moveAllPosition(double* targetPos, double duration)
         if(!ros::ok()) break;
         percent = (double)i/duration;
         for(int j=0; j<12; j++){
-            lowCmd.motorCmd[j].q = lastPos[j]*(1-percent) + targetPos[j]*percent; 
+            lowCmd.motorCmd[j].q = lastPos[j]*(1-percent) + targetPos[j]*percent;
         }
         sendServoCmd();
+
+        // Pose optimizer
     }
 }
 
